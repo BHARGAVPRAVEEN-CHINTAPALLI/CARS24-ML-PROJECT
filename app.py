@@ -12,9 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ══════════════════════════════════════════════════
-# LOAD SAVED FILES
-# ══════════════════════════════════════════════════
+
 @st.cache_resource
 def load_model():
     model   = pickle.load(open('best_model.pkl',    'rb'))
