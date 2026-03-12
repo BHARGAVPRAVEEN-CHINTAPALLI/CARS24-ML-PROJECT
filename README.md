@@ -2,7 +2,6 @@
 
 > A complete end-to-end Machine Learning project that predicts fair market prices for used cars listed on Cars24 across 8 major Indian cities.
 
-🔗 **[Live App →](https://cars24-ml-project-adf2gdbsugtyhof8rrvfev.streamlit.app)**  
 🔗 **[Dataset →](https://drive.google.com/file/d/15-Dq1HZN7P907WFWlFWPa7dmbm_mt3Zy/view?usp=sharing)**
 
 ---
@@ -18,6 +17,8 @@ The model achieves an **R² score of 0.9023** — meaning it correctly explains 
 ## 🖥️ Live Demo
 
 ![App Screenshot](app-screenshot.png)
+
+🔗 **[Live App →](https://cars24-ml-project-adf2gdbsugtyhof8rrvfev.streamlit.app)** 
 
 Enter any car's details — brand, model, engine type, transmission, city, year and KMs driven — and get an instant fair market price estimate with negotiation range.
 
