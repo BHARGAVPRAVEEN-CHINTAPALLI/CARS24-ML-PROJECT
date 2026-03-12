@@ -16,7 +16,7 @@ The model achieves an **R² score of 0.9023** — meaning it correctly explains 
 
 ## 🖥️ Live Demo
 
-![App Screenshot](charts\app-screenshot.png)
+![App Screenshot](app-screenshot.png)
 
 🔗 **[Live App →](https://cars24-ml-project-adf2gdbsugtyhof8rrvfev.streamlit.app)** 
 
