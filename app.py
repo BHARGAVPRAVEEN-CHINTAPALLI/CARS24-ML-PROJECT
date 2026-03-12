@@ -3,9 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle
 
-# ══════════════════════════════════════════════════
-# PAGE CONFIGURATION
-# ══════════════════════════════════════════════════
+
 st.set_page_config(
     page_title="Cars24 Price Predictor",
     page_icon="🚗",
@@ -27,9 +25,7 @@ def load_data():
 model, scaler, model_columns = load_model()
 df = load_data()
 
-# ══════════════════════════════════════════════════
-# SIDEBAR
-# ══════════════════════════════════════════════════
+
 with st.sidebar:
     st.image("logo.png",
              width=150)
@@ -65,17 +61,13 @@ with st.sidebar:
     st.markdown("**Key Finding:**")
     st.markdown("Car Age is the **#1 price driver** — 10x more important than any other feature")
 
-# ══════════════════════════════════════════════════
-# MAIN HEADER
-# ══════════════════════════════════════════════════
+
 st.title("🚗 Cars24 Price Predictor")
 st.markdown("#### Predict the fair market value of any used car in India")
-st.markdown("*Trained on 14,907 real Cars24 listings across 8 cities*")
+st.markdown("*Trained on 15,673 real Cars24 listings across 8 cities*")
 st.markdown("---")
 
-# ══════════════════════════════════════════════════
-# INPUT SECTION
-# ══════════════════════════════════════════════════
+
 st.subheader("🔍 Enter Car Details")
 
 col1, col2, col3 = st.columns(3)
@@ -83,28 +75,89 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("**🏷️ Car Identity**")
 
+    # Step 1 — Brand selection
     brand = st.selectbox(
         "Brand",
         options=sorted(df['Brand'].unique().tolist()),
         help="Select the car manufacturer"
     )
 
-    # Filter models by selected brand
-    brand_models = df[df['Brand'] == brand]['Model'].unique().tolist()
-    car_model = st.selectbox(
-        "Model",
-        options=sorted(brand_models),
-        help="Models filtered by selected brand"
-    )
+    # Step 2 — Engine type filtered by Brand
+    available_engines = df[
+        df['Brand'] == brand
+    ]['Engine_Type'].unique().tolist()
 
     engine_type = st.selectbox(
         "Engine Type",
-        options=df['Engine_Type'].unique().tolist(),
-        help="Petrol, Diesel or Other (CNG/Electric)"
+        options=sorted(available_engines),
+        help="Only shows engine types available for selected brand"
     )
 
+    # Step 3 — Model filtered by BOTH Brand + Engine Type
+    available_models = df[
+        (df['Brand'] == brand) &
+        (df['Engine_Type'] == engine_type)
+    ]['Model'].unique().tolist()
+
+    if len(available_models) == 0:
+        st.error(f"❌ No {engine_type} models found for {brand}")
+        car_model = None
+    else:
+        car_model = st.selectbox(
+            "Model",
+            options=sorted(available_models),
+            help=f"Showing {len(available_models)} models for {brand} {engine_type}"
+        )
+        st.caption(f"✅ {len(available_models)} models available")
+
 with col2:
-    st.markdown("**📍 Location**")
+    st.markdown("**⚙️ Specifications**")
+
+    # Transmission filtered by Brand + Engine + Model
+    if car_model:
+        available_trans = df[
+            (df['Brand'] == brand) &
+            (df['Engine_Type'] == engine_type) &
+            (df['Model'] == car_model)
+        ]['Transmission'].unique().tolist()
+    else:
+        available_trans = ['Manual', 'Auto']
+
+    transmission = st.selectbox(
+        "Transmission",
+        options=available_trans,
+        help="Only shows transmissions available for selected model"
+    )
+
+    is_top_trim = st.radio(
+        "Variant Type",
+        options=[0, 1],
+        format_func=lambda x: "🔝 Top Trim (ZXI/Asta/Alpha/AMT)"
+                               if x == 1 else "⚙️ Base / Mid Trim",
+        help="Is this a premium or basic variant?"
+    )
+
+    # Show real price range for this exact combination
+    if car_model:
+        combo_prices = df[
+            (df['Brand'] == brand) &
+            (df['Model'] == car_model) &
+            (df['Engine_Type'] == engine_type)
+        ]['Price_In_Lakhs']
+
+        if len(combo_prices) > 0:
+            st.markdown("**📊 Real Market Range:**")
+            range_col1, range_col2 = st.columns(2)
+            with range_col1:
+                st.metric("Min Price",
+                          f"₹{combo_prices.min():.2f}L")
+            with range_col2:
+                st.metric("Max Price",
+                          f"₹{combo_prices.max():.2f}L")
+            st.caption(f"Based on {len(combo_prices)} real listings")
+
+with col3:
+    st.markdown("**📍 Location & Condition**")
 
     location = st.selectbox(
         "City",
@@ -117,15 +170,6 @@ with col2:
         options=sorted(df['State'].unique().tolist()),
         help="State where car is registered"
     )
-
-    transmission = st.selectbox(
-        "Transmission",
-        options=df['Transmission'].unique().tolist(),
-        help="Manual or Automatic"
-    )
-
-with col3:
-    st.markdown("**🔧 Car Condition**")
 
     manufacture_year = st.slider(
         "Year of Manufacture",
@@ -143,20 +187,10 @@ with col3:
         max_value=300000,
         value=50000,
         step=1000,
-        help="Total KMs driven by the car"
+        help="Total KMs driven"
     )
 
-    is_top_trim = st.radio(
-        "Variant Type",
-        options=[0, 1],
-        format_func=lambda x: "🔝 Top Trim (ZXI/Asta/Alpha/AMT)" if x == 1
-                               else "⚙️ Base / Mid Trim",
-        help="Is this a premium or basic variant?"
-    )
 
-# ══════════════════════════════════════════════════
-# PREDICTION FUNCTION
-# ══════════════════════════════════════════════════
 def predict_price(brand, car_model, engine_type, transmission,
                   location, state, car_age, driven_kms, is_top_trim):
 
@@ -216,126 +250,31 @@ def predict_price(brand, car_model, engine_type, transmission,
 
     return price
 
-# ══════════════════════════════════════════════════
-# PREDICT BUTTON
-# ══════════════════════════════════════════════════
 st.markdown("---")
 
 predict_col, _, _ = st.columns([1, 1, 1])
 with predict_col:
     predict_clicked = st.button(
         "🔮 Predict Fair Market Price",
-        use_container_width=True
+        use_container_width=True,
+        disabled=(car_model is None)  # Disable if no valid model
     )
 
+# Safety check before predicting
 if predict_clicked:
-    with st.spinner("Analysing 136 features..."):
-        predicted_price = predict_price(
-            brand, car_model, engine_type, transmission,
-            location, state, car_age, driven_kms, is_top_trim
-        )
-
-    st.markdown("---")
-    st.subheader("💰 Prediction Results")
-
-    # ── Main price display ─────────────────────────
-    res_col1, res_col2, res_col3, res_col4 = st.columns(4)
-
-    with res_col1:
-        st.metric(
-            label="🎯 Predicted Price",
-            value=f"₹{predicted_price:.2f} Lakhs"
-        )
-    with res_col2:
-        lower = predicted_price * 0.90
-        st.metric(
-            label="📉 Negotiate At",
-            value=f"₹{lower:.2f} Lakhs",
-            delta=f"-₹{predicted_price - lower:.2f}L",
-            delta_color="inverse"
-        )
-    with res_col3:
-        upper = predicted_price * 1.10
-        st.metric(
-            label="📈 Max Fair Price",
-            value=f"₹{upper:.2f} Lakhs",
-            delta=f"+₹{upper - predicted_price:.2f}L"
-        )
-    with res_col4:
-        monthly_emi = (predicted_price * 100000 * 0.09 / 12)
-        st.metric(
-            label="💳 Approx EMI",
-            value=f"₹{monthly_emi:,.0f}/mo",
-            help="Estimated at 9% interest, 5-year loan"
-        )
-
-    # ── Price range bar ────────────────────────────
-    st.markdown("---")
-    st.markdown("**📊 Price Range Analysis**")
-
-    range_col1, range_col2 = st.columns([2, 1])
-
-    with range_col1:
-        # Similar cars in dataset
-        similar = df[
-            (df['Brand'] == brand) &
-            (df['Car_Age'].between(car_age - 1, car_age + 1))
-        ]['Price_In_Lakhs']
-
-        if len(similar) > 5:
-            st.markdown(f"*Based on {len(similar)} similar cars in our dataset:*")
-            sim_col1, sim_col2, sim_col3 = st.columns(3)
-            with sim_col1:
-                st.metric("Lowest Similar", f"₹{similar.min():.2f}L")
-            with sim_col2:
-                st.metric("Average Similar", f"₹{similar.mean():.2f}L")
-            with sim_col3:
-                st.metric("Highest Similar", f"₹{similar.max():.2f}L")
-        else:
-            st.info("Not enough similar cars in dataset for comparison")
-
-    with range_col2:
-        # Buyer verdict
-        if len(similar) > 5:
-            avg_similar = similar.mean()
-            diff = predicted_price - avg_similar
-            if diff < -0.5:
-                st.success("🟢 GOOD DEAL\nBelow market average!")
-            elif diff > 0.5:
-                st.warning("🔴 ABOVE MARKET\nNegotiate the price down")
-            else:
-                st.info("🟡 FAIR PRICE\nIn line with market")
-
-    # ── Car Summary ────────────────────────────────
-    st.markdown("---")
-    st.subheader("🚘 Car Summary")
-
-    sum_col1, sum_col2 = st.columns(2)
-    with sum_col1:
-        st.markdown(f"**Brand**         : {brand}")
-        st.markdown(f"**Model**         : {car_model}")
-        st.markdown(f"**Engine Type**   : {engine_type}")
-        st.markdown(f"**Transmission**  : {transmission}")
-    with sum_col2:
-        st.markdown(f"**Year**          : {manufacture_year} ({car_age} years old)")
-        st.markdown(f"**KMs Driven**    : {driven_kms:,} km")
-        st.markdown(f"**City**          : {location}")
-        st.markdown(f"**Variant**       : {'Top Trim' if is_top_trim else 'Base/Mid Trim'}")
-
-    # ── Market insight ─────────────────────────────
-    st.markdown("---")
-    if predicted_price < 2:
-        st.info("💡 **Budget Segment** — Great entry-level buy. Parts and maintenance are cheap.")
-    elif predicted_price < 5:
-        st.info("💡 **Value Segment** — Most popular price band. High demand, easy resale.")
-    elif predicted_price < 8:
-        st.info("💡 **Mid Premium** — Good balance of features and value. Selective buyers.")
+    if car_model is None:
+        st.error("❌ Please select a valid Brand + Engine Type combination first!")
     else:
-        st.info("💡 **Premium Segment** — Luxury features. Smaller buyer pool, longer to sell.")
+        with st.spinner("Analysing 136 features..."):
+            predicted_price = predict_price(
+                brand, car_model, engine_type, transmission,
+                location, state, car_age, driven_kms, is_top_trim
+            )
+        
+        st.success(f"✅ Predicted Price: **₹{predicted_price:.2f} Lakhs**")
+        st.balloons()
 
-# ══════════════════════════════════════════════════
-# MARKET INSIGHTS SECTION
-# ══════════════════════════════════════════════════
+
 st.markdown("---")
 st.subheader("📊 Market Insights From Our Dataset")
 
@@ -356,12 +295,8 @@ with ins_col3:
     age_avg = df.groupby('Car_Age')['Price_In_Lakhs'].mean()
     st.line_chart(age_avg)
 
-# ══════════════════════════════════════════════════
-# FOOTER
-# ══════════════════════════════════════════════════
+
 st.markdown("---")
 st.caption(
-    "Built with ❤️ | Data: Cars24 (15,673 listings) | "
-    "Model: XGBoost (R²=0.90) | "
-    "Deployed on Streamlit Cloud"
+    "Developed by Bhargav Praveen Chintapalli"
 )
