@@ -260,7 +260,7 @@ streamlit run app.py
 ## 👤 About
 
 Built by **BHARGAV PRAVEEN CHINTAPALLI**  
-Data Analyst | Python | Machine Learning | SQL
+Aspiring Data Analyst | Python | Machine Learning | SQL
 
 🔗 [LinkedIn](https://www.linkedin.com/in/bhargavchintapalli)  
 🔗 [GitHub](https://github.com/BHARGAVPRAVEEN-CHINTAPALLI)  
