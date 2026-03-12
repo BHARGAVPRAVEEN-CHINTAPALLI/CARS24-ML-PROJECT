@@ -17,7 +17,7 @@ The model achieves an **R² score of 0.9023** — meaning it correctly explains 
 
 ## 🖥️ Live Demo
 
-![App Screenshot](https://drive.google.com/file/d/1CkWXx3JSzNIYLApJ0CslWBC-IrOuvThp/view?usp=sharing)
+![App Screenshot](app-screenshot.jpg)
 
 Enter any car's details — brand, model, engine type, transmission, city, year and KMs driven — and get an instant fair market price estimate with negotiation range.
 
