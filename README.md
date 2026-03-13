@@ -16,7 +16,7 @@ The model achieves an **R² score of 0.9023** — meaning it correctly explains 
 
 ## 🖥️ Live Demo
 
-![App Screenshot](charts\app-screenshot.png)
+![App Screenshot](app-screenshot.png)
 
 🔗 **[Live App →](https://cars24-ml-project-adf2gdbsugtyhof8rrvfev.streamlit.app)** 
 
@@ -260,7 +260,7 @@ streamlit run app.py
 ## 👤 About
 
 Built by **BHARGAV PRAVEEN CHINTAPALLI**  
-Data Analyst | Python | Machine Learning | SQL
+Aspiring Data Analyst | Python | Machine Learning | SQL
 
 🔗 [LinkedIn](https://www.linkedin.com/in/bhargavchintapalli)  
 🔗 [GitHub](https://github.com/BHARGAVPRAVEEN-CHINTAPALLI)  
